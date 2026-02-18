@@ -1,0 +1,95 @@
+{
+  "security": {
+    "authentication": {
+      "maxLoginAttempts": 5,
+      "loginBlockDuration": 900000,
+      "sessionTimeout": 3600000,
+      "requireStrongPasswords": true,
+      "enableTwoFactorAuth": false
+    },
+    "rateLimiting": {
+      "apiRequestsPerMinute": 60,
+      "challengeAttemptsPerHour": 100,
+      "loginAttemptsPerMinute": 5,
+      "enableRateLimiting": true
+    },
+    "ipSecurity": {
+      "enableIPBlocking": true,
+      "autoBlockSuspiciousIPs": true,
+      "whitelistedIPs": ["127.0.0.1", "localhost"],
+      "maxBlockedIPs": 1000
+    },
+    "contentSecurity": {
+      "enableXSSProtection": true,
+      "enableCSRFProtection": true,
+      "enableSQLInjectionProtection": true,
+      "sanitizeInputs": true
+    },
+    "monitoring": {
+      "logAllRequests": true,
+      "logSecurityEvents": true,
+      "enableRealTimeAlerts": true,
+      "retainLogsForDays": 30
+    }
+  },
+  "admin": {
+    "panel": {
+      "enableUserManagement": true,
+      "enableChallengeManagement": true,
+      "enableSystemMaintenance": true,
+      "enableSecurityControls": true,
+      "enableEmergencyLockdown": true
+    },
+    "authentication": {
+      "adminPasswords": ["admin123", "secureAdmin2025"],
+      "sessionDuration": 86400000,
+      "requireIPWhitelist": false,
+      "logAdminActions": true
+    },
+    "permissions": {
+      "canDeleteUsers": true,
+      "canModifyChallenges": true,
+      "canAccessLogs": true,
+      "canPerformMaintenance": true,
+      "canBlockIPs": true
+    }
+  },
+  "platform": {
+    "competition": {
+      "maxParticipants": 1000,
+      "enableRegistration": true,
+      "enableChallenges": true,
+      "maintenanceMode": false
+    },
+    "features": {
+      "enableScoreboard": true,
+      "enableTeams": false,
+      "enableHints": true,
+      "enableChat": false
+    },
+    "performance": {
+      "maxRequestSize": "1mb",
+      "enableCaching": true,
+      "cacheTimeout": 300000,
+      "maxConcurrentUsers": 500
+    }
+  },
+  "backup": {
+    "autoBackup": true,
+    "backupInterval": 3600000,
+    "maxBackups": 10,
+    "backupLocation": "./backups/"
+  },
+  "notifications": {
+    "enableEmailAlerts": false,
+    "adminEmail": "admin@example.com",
+    "securityAlertThreshold": 5,
+    "enableSlackIntegration": false
+  },
+  "compliance": {
+    "enableAuditLogging": true,
+    "logRetentionDays": 90,
+    "enableDataExport": true,
+    "enableDataDeletion": true
+  }
+}

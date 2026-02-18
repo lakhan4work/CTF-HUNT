@@ -1,0 +1,2 @@
+This is the final flag for thechallenge!
+flag{n4v1g4t1on_is_k3y}

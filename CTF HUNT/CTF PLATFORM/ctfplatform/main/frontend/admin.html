@@ -1,0 +1,1373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CTF HUNT | Admin Security Panel</title>
+  <link rel="stylesheet" href="assets/styles/main.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    .admin-header {
+      background: linear-gradient(135deg, var(--danger), #dc2626);
+      color: white;
+      padding: var(--space-xl);
+      margin: calc(-1 * var(--space-2xl)) calc(-1 * var(--space-3xl)) var(--space-2xl);
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    }
+
+    .admin-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-lg);
+      margin-bottom: var(--space-2xl);
+    }
+
+    .admin-stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .admin-stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent-primary);
+    }
+
+    .admin-stat-value {
+      font-size: var(--font-size-3xl);
+      font-weight: 800;
+      color: var(--accent-primary);
+      margin-bottom: var(--space-sm);
+    }
+
+    .admin-stat-label {
+      color: var(--text-muted);
+      font-size: var(--font-size-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+    }
+
+    .security-alert {
+      background: var(--danger);
+      color: white;
+      padding: var(--space-lg);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-xl);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .security-alert.warning {
+      background: var(--warning);
+    }
+
+    .security-alert.success {
+      background: var(--success);
+    }
+
+    .admin-tabs {
+      display: flex;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-2xl);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .admin-tab {
+      padding: var(--space-md) var(--space-xl);
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all var(--transition-fast);
+    }
+
+    .admin-tab.active {
+      color: var(--accent-primary);
+      border-bottom-color: var(--accent-primary);
+      background: var(--bg-tertiary);
+    }
+
+    .admin-tab:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    .admin-tab-content {
+      display: none;
+    }
+
+    .admin-tab-content.active {
+      display: block;
+    }
+
+    .security-log {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: var(--font-size-sm);
+    }
+
+    .security-log-entry {
+      padding: var(--space-sm) var(--space-md);
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      gap: var(--space-md);
+    }
+
+    .security-log-entry:last-child {
+      border-bottom: none;
+    }
+
+    .log-timestamp {
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .log-level {
+      flex-shrink: 0;
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: var(--font-size-xs);
+    }
+
+    .log-level.error {
+      background: var(--danger);
+      color: white;
+    }
+
+    .log-level.warning {
+      background: var(--warning);
+      color: white;
+    }
+
+    .log-level.info {
+      background: var(--info);
+      color: white;
+    }
+
+    .log-level.success {
+      background: var(--success);
+      color: white;
+    }
+
+    .user-action-buttons {
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    .user-action-buttons .button {
+      padding: var(--space-xs) var(--space-md);
+      font-size: var(--font-size-xs);
+    }
+
+    .challenge-status {
+      display: inline-flex;
+      align-items: center;
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+    }
+
+    .challenge-status.active {
+      background: var(--success);
+      color: white;
+    }
+
+    .challenge-status.disabled {
+      background: var(--text-muted);
+      color: white;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--space-xl);
+    }
+
+    .monitoring-chart {
+      height: 200px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-logo">🛡️</div>
+        <h1>Admin Panel</h1>
+      </div>
+    </div>
+
+    <div class="sidebar-content">
+      <nav class="nav">
+        <a href="#dashboard" class="nav-item admin-nav-item" data-tab="dashboard" aria-current="page">
+          <span class="nav-icon">📊</span>
+          Dashboard
+          <span class="badge live">Live</span>
+        </a>
+        <a href="#users" class="nav-item admin-nav-item" data-tab="users">
+          <span class="nav-icon">👥</span>
+          User Management
+        </a>
+        <a href="#security" class="nav-item admin-nav-item" data-tab="security">
+          <span class="nav-icon">🔒</span>
+          Security Monitor
+        </a>
+        <a href="#challenges" class="nav-item admin-nav-item" data-tab="challenges">
+          <span class="nav-icon">🧩</span>
+          Challenge Control
+        </a>
+        <a href="#system" class="nav-item admin-nav-item" data-tab="system">
+          <span class="nav-icon">⚙️</span>
+          System Settings
+        </a>
+        <a href="#logs" class="nav-item admin-nav-item" data-tab="logs">
+          <span class="nav-icon">📋</span>
+          Activity Logs
+        </a>
+      </nav>
+    </div>
+
+    <div class="sidebar-footer">
+      <a class="button secondary" href="index.html">🏠 Back to CTF</a>
+      <button class="button danger mt-md" onclick="adminSignOut()">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="admin-header">
+      <h1>🛡️ Security Administration Panel</h1>
+      <p>Welcome, <span id="admin-name">Administrator</span> | Last login: <span id="last-login">Today 08:30 AM</span></p>
+    </div>
+
+    <!-- Security Alerts -->
+    <div id="security-alerts"></div>
+
+    <!-- Dashboard Tab -->
+    <div id="dashboard-tab" class="admin-tab-content active">
+      <h2 class="mb-xl">📊 System Overview</h2>
+      
+      <div class="admin-stats">
+        <div class="admin-stat-card">
+          <div class="admin-stat-value" id="total-users">0</div>
+          <div class="admin-stat-label">Total Users</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-value" id="active-sessions">0</div>
+          <div class="admin-stat-label">Active Sessions</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-value" id="total-challenges">0</div>
+          <div class="admin-stat-label">Total Challenges</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-value" id="security-threats">0</div>
+          <div class="admin-stat-label">Security Threats</div>
+        </div>
+      </div>
+
+      <div class="admin-grid">
+        <div class="card">
+          <h3 class="mb-lg">📈 User Activity</h3>
+          <div class="monitoring-chart">
+            📊 Real-time user activity chart<br>
+            <small>Chart integration pending</small>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h3 class="mb-lg">🚨 Recent Security Events</h3>
+          <div class="security-log" id="recent-security-events">
+            <div class="security-log-entry">
+              <span class="log-timestamp">12:45</span>
+              <span class="log-level info">INFO</span>
+              <span>Admin panel accessed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="users-tab" class="admin-tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
+        <h2>👥 User Management</h2>
+        <div>
+          <button class="button secondary" onclick="refreshUsers()">🔄 Refresh</button>
+          <button class="button" onclick="exportUsers()">📊 Export</button>
+        </div>
+      </div>
+
+      <div class="card mb-xl">
+        <h3 class="mb-lg">🔍 Search & Filter</h3>
+        <div class="grid grid-3">
+          <div class="form-group">
+            <label class="form-label" for="user-search">Search Users</label>
+            <input id="user-search" class="form-input" placeholder="Username or email..." onkeyup="filterUsers()"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="user-status-filter">Status</label>
+            <select id="user-status-filter" class="form-select" onchange="filterUsers()">
+              <option value="">All Users</option>
+              <option value="active">Active</option>
+              <option value="banned">Banned</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="user-role-filter">Role</label>
+            <select id="user-role-filter" class="form-select" onchange="filterUsers()">
+              <option value="">All Roles</option>
+              <option value="admin">Admin</option>
+              <option value="user">User</option>
+              <option value="moderator">Moderator</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="table" id="users-table">
+          <thead>
+            <tr>
+              <th>👤 User</th>
+              <th>📧 Email</th>
+              <th>🏅 Rank</th>
+              <th>💎 Score</th>
+              <th>🕒 Last Active</th>
+              <th>🔧 Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <!-- Users will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Security Tab -->
+    <div id="security-tab" class="admin-tab-content">
+      <h2 class="mb-xl">🔒 Security Monitoring</h2>
+
+      <div class="admin-grid mb-xl">
+        <div class="card">
+          <h3 class="mb-lg">🚨 Threat Detection</h3>
+          <div class="form-group">
+            <label class="form-label">IP Blocking</label>
+            <input class="form-input" placeholder="Enter IP address to block..." id="block-ip-input"/>
+            <button class="button danger mt-md" onclick="blockIP()">🚫 Block IP</button>
+          </div>
+          <div class="mt-xl">
+            <h4>🛡️ Active Blocks</h4>
+            <div id="blocked-ips-list" class="mt-md">
+              <!-- Blocked IPs will appear here -->
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="mb-lg">⚡ Rate Limiting</h3>
+          <div class="form-group">
+            <label class="form-label">Login Attempts Limit</label>
+            <input type="number" class="form-input" value="5" id="login-limit"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">API Requests per Minute</label>
+            <input type="number" class="form-input" value="60" id="api-limit"/>
+          </div>
+          <button class="button" onclick="updateSecuritySettings()">💾 Update Limits</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="mb-lg">📊 Security Analytics</h3>
+        <div class="monitoring-chart">
+          📈 Security event timeline<br>
+          <small>Failed login attempts, blocked IPs, suspicious activity</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Challenges Tab -->
+    <div id="challenges-tab" class="admin-tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
+        <h2>🧩 Challenge Administration</h2>
+        <button class="button" onclick="addNewChallenge()">➕ Add Challenge</button>
+      </div>
+
+      <div class="grid" id="admin-challenges-container">
+        <!-- Challenges will be loaded here -->
+      </div>
+    </div>
+
+    <!-- System Tab -->
+    <div id="system-tab" class="admin-tab-content">
+      <h2 class="mb-xl">⚙️ System Configuration</h2>
+
+      <div class="admin-grid">
+        <div class="card">
+          <h3 class="mb-lg">🎛️ Competition Settings</h3>
+          <div class="form-group">
+            <label class="form-label">Competition Status</label>
+            <select class="form-select" id="competition-status">
+              <option value="active">🟢 Active</option>
+              <option value="paused">🟡 Paused</option>
+              <option value="ended">🔴 Ended</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Participants</label>
+            <input type="number" class="form-input" value="1000" id="max-participants"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Competition End Time</label>
+            <input type="datetime-local" class="form-input" id="end-time"/>
+          </div>
+          <button class="button" onclick="updateCompetitionSettings()">💾 Save Settings</button>
+        </div>
+
+        <div class="card">
+          <h3 class="mb-lg">🔧 System Maintenance</h3>
+          <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+            <button class="button secondary" onclick="clearCache()">🧹 Clear Cache</button>
+            <button class="button secondary" onclick="backupDatabase()">💾 Backup Database</button>
+            <button class="button warning" onclick="restartServer()">🔄 Restart Server</button>
+            <button class="button danger" onclick="maintenanceMode()">🚧 Maintenance Mode</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logs Tab -->
+    <div id="logs-tab" class="admin-tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
+        <h2>📋 Activity Logs</h2>
+        <div>
+          <select class="form-select" id="log-level-filter" onchange="filterLogs()">
+            <option value="">All Levels</option>
+            <option value="error">Errors Only</option>
+            <option value="warning">Warnings</option>
+            <option value="info">Info</option>
+          </select>
+          <button class="button secondary ml-md" onclick="refreshLogs()">🔄 Refresh</button>
+          <button class="button" onclick="exportLogs()">📊 Export</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="security-log" id="admin-activity-logs" style="max-height: 500px;">
+          <!-- Logs will be populated here -->
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer text-muted text-center">
+      🛡️ Admin Panel v2.0 | Secure Administration Interface
+    </footer>
+  </main>
+</div>
+
+<!-- Admin Authentication Modal (Hidden by default) -->
+<div id="admin-auth-modal" style="display: none;">
+</div>
+
+<script>
+// Admin Panel Functionality
+let currentUsers = [];
+let currentChallenges = [];
+let securityLogs = [];
+
+// Admin Authentication
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Admin panel initializing...");
+  
+  // Check admin authentication first
+  const adminAuth = localStorage.getItem("adminAuthenticated");
+  if (adminAuth !== "true") {
+    showToast("Please login through the main login page as administrator", "error");
+    setTimeout(() => {
+      window.location.href = "../login.html";
+    }, 2000);
+    return;
+  } else {
+    hideAdminAuthModal();
+    initializeAdminPanel();
+  }
+});
+
+function showAdminAuthModal() {
+  // Modal no longer needed - redirect to login
+}
+
+function hideAdminAuthModal() {
+  // Modal no longer needed
+}
+
+function initializeAdminPanel() {
+  console.log("Initializing admin panel...");
+  
+  // Initialize navigation
+  initializeNavigation();
+  
+  // Load initial data
+  loadDashboardStats();
+  loadUsers();
+  loadChallenges();
+  loadSecurityLogs();
+  
+  // Start real-time updates
+  startRealTimeUpdates();
+  
+  // Set admin name
+  const adminName = localStorage.getItem("username") || "Administrator";
+  document.querySelector("#admin-name").textContent = adminName;
+  
+  // Set last login time
+  document.querySelector("#last-login").textContent = new Date().toLocaleString();
+  
+  // Add security alert
+  addSecurityAlert("🛡️ Admin panel accessed successfully", "success");
+}
+
+function initializeNavigation() {
+  const navItems = document.querySelectorAll(".admin-nav-item");
+  const tabContents = document.querySelectorAll(".admin-tab-content");
+  
+  navItems.forEach(item => {
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      
+      const targetTab = item.dataset.tab;
+      
+      // Update nav items
+      navItems.forEach(nav => nav.removeAttribute("aria-current"));
+      item.setAttribute("aria-current", "page");
+      
+      // Update tab contents
+      tabContents.forEach(tab => tab.classList.remove("active"));
+      document.querySelector(`#${targetTab}-tab`).classList.add("active");
+      
+      // Load tab-specific data
+      loadTabData(targetTab);
+    });
+  });
+}
+
+function loadTabData(tabName) {
+  switch(tabName) {
+    case "users":
+      refreshUsers();
+      break;
+    case "security":
+      loadSecurityData();
+      break;
+    case "challenges":
+      loadChallenges();
+      break;
+    case "logs":
+      refreshLogs();
+      break;
+  }
+}
+
+async function loadDashboardStats() {
+  try {
+    // Simulate loading stats
+    const stats = {
+      totalUsers: await getUserCount(),
+      activeSessions: Math.floor(Math.random() * 50) + 10,
+      totalChallenges: await getChallengeCount(),
+      securityThreats: Math.floor(Math.random() * 5)
+    };
+    
+    // Animate stats
+    animateCounter("total-users", stats.totalUsers);
+    animateCounter("active-sessions", stats.activeSessions);
+    animateCounter("total-challenges", stats.totalChallenges);
+    animateCounter("security-threats", stats.securityThreats);
+    
+    // Show security alert if threats detected
+    if (stats.securityThreats > 0) {
+      addSecurityAlert(`⚠️ ${stats.securityThreats} potential security threat(s) detected`, "warning");
+    }
+    
+  } catch (error) {
+    console.error("Error loading dashboard stats:", error);
+    showToast("Failed to load dashboard statistics", "error");
+  }
+}
+
+async function getUserCount() {
+  try {
+    // Load user data from userData.json (simulated for now)
+    return 4; // Based on the current userData.json file
+  } catch (error) {
+    return 0;
+  }
+}
+
+async function getChallengeCount() {
+  try {
+    // Load challenge data from courseData.json (simulated for now)
+    return 6; // Based on the current courseData.json file
+  } catch (error) {
+    return 0;
+  }
+}
+
+async function loadUsers() {
+  try {
+    const response = await fetch("http://localhost:8000/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ adminKey: "secureAdmin2025" })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch users');
+    }
+
+    const data = await response.json();
+    currentUsers = data.users || [];
+    
+    console.log("Users loaded:", currentUsers);
+    renderUsersTable(currentUsers);
+    
+  } catch (error) {
+    console.error("Error loading users:", error);
+    showToast("Failed to load user data", "error");
+    
+    // Fallback to mock data for demo
+    currentUsers = [
+      {
+        username: "Ashutosh1234",
+        email: "x1y1z@gmail.com",
+        ranking: 1,
+        score: 1600,
+        lastActive: "2 mins ago",
+        status: "active",
+        role: "user"
+      },
+      {
+        username: "ashutoshd",
+        email: "hello@gmail.com",
+        ranking: 2,
+        score: -1,
+        lastActive: "15 mins ago",
+        status: "active",
+        role: "user"
+      },
+      {
+        username: "ashutoshdas",
+        email: "ashutoshdas1001@gmail.com",
+        ranking: 3,
+        score: 699,
+        lastActive: "1 hour ago",
+        status: "active",
+        role: "admin"
+      },
+      {
+        username: "_a_tharv_p_andey",
+        email: "atharvpandey065@gmail.com",
+        ranking: 4,
+        score: 3149,
+        lastActive: "30 mins ago",
+        status: "active",
+        role: "user"
+      }
+    ];
+    renderUsersTable(currentUsers);
+  }
+}
+
+function renderUsersTable(users) {
+  const tbody = document.querySelector("#users-table-body");
+  
+  tbody.innerHTML = users.map(user => {
+    const status = user.status || 'active';
+    const rank = user.ranking || user.rank || 'N/A';
+    const statusBadge = getStatusBadge(status);
+    const actionButtons = getActionButtons(user.username, status, user.role);
+    
+    return `
+    <tr data-user-id="${user.username}" style="${status !== 'active' ? 'opacity: 0.7;' : ''}">
+      <td>
+        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+          <div style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-light)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white;">
+            ${user.username.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <strong>${user.username}</strong>
+            ${user.role === 'admin' ? '<span style="background: var(--danger); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">ADMIN</span>' : ''}
+            ${statusBadge}
+          </div>
+        </div>
+      </td>
+      <td>${user.email}</td>
+      <td>#${rank}</td>
+      <td><strong style="color: var(--accent-primary);">${user.score === -1 ? 'N/A' : user.score}</strong></td>
+      <td style="color: var(--text-muted);">${user.lastActive || 'Unknown'}</td>
+      <td>
+        <div class="user-action-buttons">
+          ${actionButtons}
+        </div>
+      </td>
+    </tr>
+  `;
+  }).join('');
+}
+
+function getStatusBadge(status) {
+  switch (status) {
+    case 'suspended':
+      return '<span style="background: var(--warning); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">SUSPENDED</span>';
+    case 'banned':
+      return '<span style="background: var(--danger); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">BANNED</span>';
+    case 'active':
+    default:
+      return '<span style="background: var(--success); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">ACTIVE</span>';
+  }
+}
+
+function getActionButtons(username, status, role) {
+  let buttons = `<button class="button secondary" onclick="viewUser('${username}')">👁️ View</button>`;
+  
+  // Don't allow actions on admin users
+  if (role === 'admin') {
+    return buttons;
+  }
+  
+  switch (status) {
+    case 'active':
+      buttons += `
+        <button class="button warning" onclick="suspendUser('${username}')">⏸️ Suspend</button>
+        <button class="button danger" onclick="banUser('${username}')">🚫 Ban</button>
+      `;
+      break;
+    case 'suspended':
+      buttons += `
+        <button class="button success" onclick="activateUser('${username}')">✅ Activate</button>
+        <button class="button danger" onclick="banUser('${username}')">🚫 Ban</button>
+      `;
+      break;
+    case 'banned':
+      buttons += `
+        <button class="button success" onclick="activateUser('${username}')">✅ Unban</button>
+      `;
+      break;
+  }
+  
+  return buttons;
+}
+
+async function loadChallenges() {
+  try {
+    // For demo purposes, using mock data based on courseData.json
+    currentChallenges = [
+      {
+        id: 1,
+        challenge: "SQL injection basics",
+        difficulty: "Easy",
+        points: 100,
+        category: "WebSecurity",
+        solved: 20,
+        status: "active"
+      },
+      {
+        id: 2,
+        challenge: "Caesar Cipher Twist",
+        difficulty: "Medium",
+        points: 250,
+        category: "Cryptography",
+        solved: 5,
+        status: "active"
+      },
+      {
+        id: 3,
+        challenge: "Binary Analysis",
+        difficulty: "Hard",
+        points: 500,
+        category: "ReverseEngineering",
+        solved: 5,
+        status: "active"
+      },
+      {
+        id: 4,
+        challenge: "Memory Dump Investigation",
+        difficulty: "Medium",
+        points: 250,
+        category: "DigitalForensics",
+        solved: 1,
+        status: "disabled"
+      },
+      {
+        id: 5,
+        challenge: "Social Media Intel",
+        difficulty: "Easy",
+        points: 100,
+        category: "OSINT",
+        solved: 1,
+        status: "active"
+      },
+      {
+        id: 6,
+        challenge: "ML Model Poisoning",
+        difficulty: "Hard",
+        points: 600,
+        category: "aiSecurity",
+        solved: 0,
+        status: "active"
+      }
+    ];
+    
+    renderChallengesAdmin(currentChallenges);
+    
+  } catch (error) {
+    console.error("Error loading challenges:", error);
+    showToast("Failed to load challenges", "error");
+  }
+}
+
+function renderChallengesAdmin(challenges) {
+  const container = document.querySelector("#admin-challenges-container");
+  
+  container.innerHTML = challenges.map(challenge => `
+    <div class="card challenge-card" data-challenge-id="${challenge.id}">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-lg);">
+        <div>
+          <span class="challenge-status ${challenge.status}">
+            ${challenge.status === 'active' ? '🟢 Active' : '🔴 Disabled'}
+          </span>
+        </div>
+        <span style="color: var(--warning); font-weight: bold;">💎 ${challenge.points} pts</span>
+      </div>
+      
+      <h4 class="mb-sm">${challenge.challenge}</h4>
+      <div class="mb-md">
+        <span style="color: var(--text-muted);">Category:</span> ${challenge.category}<br>
+        <span style="color: var(--text-muted);">Difficulty:</span> ${challenge.difficulty}<br>
+        <span style="color: var(--text-muted);">Solved by:</span> ${challenge.solved} users
+      </div>
+      
+      <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+        <button class="button secondary" onclick="editChallenge(${challenge.id})">✏️ Edit</button>
+        <button class="button ${challenge.status === 'active' ? 'warning' : 'success'}" 
+                onclick="toggleChallenge(${challenge.id})">
+          ${challenge.status === 'active' ? '⏸️ Disable' : '▶️ Enable'}
+        </button>
+        <button class="button danger" onclick="deleteChallenge(${challenge.id})">🗑️ Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadSecurityLogs() {
+  securityLogs = [
+    {
+      timestamp: new Date().toLocaleTimeString(),
+      level: "info",
+      message: "Admin panel accessed",
+      ip: "127.0.0.1"
+    },
+    {
+      timestamp: new Date(Date.now() - 300000).toLocaleTimeString(),
+      level: "warning",
+      message: "Multiple login attempts detected",
+      ip: "192.168.1.100"
+    },
+    {
+      timestamp: new Date(Date.now() - 600000).toLocaleTimeString(),
+      level: "error",
+      message: "Suspicious API request blocked",
+      ip: "10.0.0.50"
+    },
+    {
+      timestamp: new Date(Date.now() - 900000).toLocaleTimeString(),
+      level: "success",
+      message: "User password changed successfully",
+      ip: "192.168.1.10"
+    }
+  ];
+  
+  renderSecurityLogs();
+  renderActivityLogs();
+}
+
+function renderSecurityLogs() {
+  const container = document.querySelector("#recent-security-events");
+  
+  const recentLogs = securityLogs.slice(0, 5);
+  
+  container.innerHTML = recentLogs.map(log => `
+    <div class="security-log-entry">
+      <span class="log-timestamp">${log.timestamp}</span>
+      <span class="log-level ${log.level}">${log.level.toUpperCase()}</span>
+      <span>${log.message}</span>
+    </div>
+  `).join('');
+}
+
+function renderActivityLogs() {
+  const container = document.querySelector("#admin-activity-logs");
+  
+  container.innerHTML = securityLogs.map(log => `
+    <div class="security-log-entry">
+      <span class="log-timestamp">${log.timestamp}</span>
+      <span class="log-level ${log.level}">${log.level.toUpperCase()}</span>
+      <span>${log.message} (IP: ${log.ip})</span>
+    </div>
+  `).join('');
+}
+
+// Admin Actions
+function refreshUsers() {
+  const btn = event?.target;
+  if (btn) {
+    btn.classList.add("loading");
+    btn.textContent = "Refreshing...";
+  }
+  
+  setTimeout(() => {
+    loadUsers();
+    if (btn) {
+      btn.classList.remove("loading");
+      btn.textContent = "🔄 Refresh";
+    }
+    showToast("User list refreshed! 👥", "success");
+  }, 1000);
+}
+
+function filterUsers() {
+  const searchTerm = document.querySelector("#user-search").value.toLowerCase();
+  const statusFilter = document.querySelector("#user-status-filter").value;
+  const roleFilter = document.querySelector("#user-role-filter").value;
+  
+  const filteredUsers = currentUsers.filter(user => {
+    const matchesSearch = user.username.toLowerCase().includes(searchTerm) || 
+                         user.email.toLowerCase().includes(searchTerm);
+    const matchesStatus = !statusFilter || user.status === statusFilter;
+    const matchesRole = !roleFilter || user.role === roleFilter;
+    
+    return matchesSearch && matchesStatus && matchesRole;
+  });
+  
+  renderUsersTable(filteredUsers);
+}
+
+function viewUser(username) {
+  showToast(`Viewing user: ${username} 👤`, "info");
+  // Implementation for viewing user details
+}
+
+async function suspendUser(username) {
+  if (confirm(`Are you sure you want to suspend user: ${username}?`)) {
+    try {
+      const response = await fetch("http://localhost:8000/admin/users/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          adminKey: "secureAdmin2025",
+          username: username,
+          action: "suspend"
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        showToast(`User ${username} has been suspended ⏸️`, "warning");
+        addSecurityLog("warning", `User ${username} suspended by admin`);
+        
+        // Update user status in UI
+        const user = currentUsers.find(u => u.username === username);
+        if (user) {
+          user.status = "suspended";
+          renderUsersTable(currentUsers);
+        }
+      } else {
+        throw new Error(data.message || "Failed to suspend user");
+      }
+    } catch (error) {
+      console.error("Error suspending user:", error);
+      showToast(`Failed to suspend user: ${error.message}`, "error");
+    }
+  }
+}
+
+async function banUser(username) {
+  if (confirm(`Are you sure you want to ban user: ${username}? This action cannot be undone easily.`)) {
+    try {
+      const response = await fetch("http://localhost:8000/admin/users/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          adminKey: "secureAdmin2025",
+          username: username,
+          action: "ban"
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        showToast(`User ${username} has been banned 🚫`, "error");
+        addSecurityLog("error", `User ${username} banned by admin`);
+        
+        // Update user status in UI
+        const user = currentUsers.find(u => u.username === username);
+        if (user) {
+          user.status = "banned";
+          renderUsersTable(currentUsers);
+        }
+      } else {
+        throw new Error(data.message || "Failed to ban user");
+      }
+    } catch (error) {
+      console.error("Error banning user:", error);
+      showToast(`Failed to ban user: ${error.message}`, "error");
+    }
+  }
+}
+
+async function activateUser(username) {
+  const user = currentUsers.find(u => u.username === username);
+  const actionText = user.status === 'banned' ? 'unban' : 'activate';
+  
+  if (confirm(`Are you sure you want to ${actionText} user: ${username}?`)) {
+    try {
+      const response = await fetch("http://localhost:8000/admin/users/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          adminKey: "secureAdmin2025",
+          username: username,
+          action: "activate"
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        showToast(`User ${username} has been ${actionText}d ✅`, "success");
+        addSecurityLog("info", `User ${username} ${actionText}d by admin`);
+        
+        // Update user status in UI
+        if (user) {
+          user.status = "active";
+          renderUsersTable(currentUsers);
+        }
+      } else {
+        throw new Error(data.message || `Failed to ${actionText} user`);
+      }
+    } catch (error) {
+      console.error(`Error ${actionText}ing user:`, error);
+      showToast(`Failed to ${actionText} user: ${error.message}`, "error");
+    }
+  }
+}
+
+async function blockIP() {
+  const ip = document.querySelector("#block-ip-input").value.trim();
+  if (ip) {
+    // Basic IP validation
+    const ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+    if (!ipRegex.test(ip)) {
+      showToast("Please enter a valid IP address format", "error");
+      return;
+    }
+    
+    if (confirm(`Block IP address: ${ip}?`)) {
+      try {
+        const response = await fetch("http://localhost:8000/admin/security/block-ip", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            adminKey: "secureAdmin2025",
+            ip: ip
+          })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          showToast(`IP ${ip} has been blocked 🚫`, "success");
+          addSecurityLog("warning", `IP ${ip} blocked by admin`);
+          document.querySelector("#block-ip-input").value = "";
+          
+          // Add to blocked IPs list
+          const blockedList = document.querySelector("#blocked-ips-list");
+          const ipItem = document.createElement('div');
+          ipItem.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-sm); background: var(--bg-tertiary); border-radius: var(--radius-sm); margin-bottom: var(--space-sm);" data-ip="${ip}">
+              <span>${ip}</span>
+              <button class="button danger" onclick="unblockIP('${ip}')">Unblock</button>
+            </div>
+          `;
+          blockedList.appendChild(ipItem);
+        } else {
+          throw new Error(data.message || "Failed to block IP");
+        }
+      } catch (error) {
+        console.error("Error blocking IP:", error);
+        showToast(`Failed to block IP: ${error.message}`, "error");
+      }
+    }
+  } else {
+    showToast("Please enter a valid IP address", "error");
+  }
+}
+
+async function unblockIP(ip) {
+  if (confirm(`Unblock IP address: ${ip}?`)) {
+    try {
+      const response = await fetch("http://localhost:8000/admin/security/unblock-ip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          adminKey: "secureAdmin2025",
+          ip: ip
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        showToast(`IP ${ip} has been unblocked ✅`, "success");
+        addSecurityLog("info", `IP ${ip} unblocked by admin`);
+        
+        // Remove from UI
+        const ipElement = document.querySelector(`[data-ip="${ip}"]`);
+        if (ipElement) {
+          ipElement.remove();
+        }
+      } else {
+        throw new Error(data.message || "Failed to unblock IP");
+      }
+    } catch (error) {
+      console.error("Error unblocking IP:", error);
+      showToast(`Failed to unblock IP: ${error.message}`, "error");
+    }
+  }
+}
+
+function updateSecuritySettings() {
+  const loginLimit = document.querySelector("#login-limit").value;
+  const apiLimit = document.querySelector("#api-limit").value;
+  
+  showToast("Security settings updated successfully! 🛡️", "success");
+  addSecurityLog("info", `Security settings updated: Login limit=${loginLimit}, API limit=${apiLimit}`);
+}
+
+function toggleChallenge(challengeId) {
+  const challenge = currentChallenges.find(c => c.id === challengeId);
+  if (challenge) {
+    challenge.status = challenge.status === 'active' ? 'disabled' : 'active';
+    renderChallengesAdmin(currentChallenges);
+    showToast(`Challenge "${challenge.challenge}" ${challenge.status === 'active' ? 'enabled' : 'disabled'} 🧩`, "success");
+    addSecurityLog("info", `Challenge "${challenge.challenge}" ${challenge.status} by admin`);
+  }
+}
+
+function editChallenge(challengeId) {
+  showToast(`Editing challenge ID: ${challengeId} ✏️`, "info");
+  // Implementation for editing challenge
+}
+
+function deleteChallenge(challengeId) {
+  const challenge = currentChallenges.find(c => c.id === challengeId);
+  if (challenge && confirm(`Are you sure you want to delete "${challenge.challenge}"?`)) {
+    currentChallenges = currentChallenges.filter(c => c.id !== challengeId);
+    renderChallengesAdmin(currentChallenges);
+    showToast(`Challenge "${challenge.challenge}" deleted 🗑️`, "success");
+    addSecurityLog("warning", `Challenge "${challenge.challenge}" deleted by admin`);
+  }
+}
+
+function addNewChallenge() {
+  showToast("Opening challenge creation dialog... ➕", "info");
+  // Implementation for adding new challenge
+}
+
+// System maintenance functions
+function clearCache() {
+  if (confirm("Clear system cache? This may temporarily slow down the platform.")) {
+    showToast("System cache cleared successfully! 🧹", "success");
+    addSecurityLog("info", "System cache cleared by admin");
+  }
+}
+
+function backupDatabase() {
+  showToast("Database backup initiated... 💾", "info");
+  setTimeout(() => {
+    showToast("Database backup completed successfully! 💾", "success");
+    addSecurityLog("info", "Database backup completed by admin");
+  }, 3000);
+}
+
+function restartServer() {
+  if (confirm("Restart the server? This will temporarily disconnect all users.")) {
+    showToast("Server restart initiated... 🔄", "warning");
+    addSecurityLog("warning", "Server restart initiated by admin");
+  }
+}
+
+function maintenanceMode() {
+  if (confirm("Enable maintenance mode? This will lock out all users except admins.")) {
+    showToast("Maintenance mode enabled 🚧", "warning");
+    addSecurityLog("warning", "Maintenance mode enabled by admin");
+  }
+}
+
+function updateCompetitionSettings() {
+  const status = document.querySelector("#competition-status").value;
+  const maxParticipants = document.querySelector("#max-participants").value;
+  const endTime = document.querySelector("#end-time").value;
+  
+  showToast("Competition settings updated successfully! 🎛️", "success");
+  addSecurityLog("info", `Competition settings updated: status=${status}, max=${maxParticipants}`);
+}
+
+function refreshLogs() {
+  showToast("Activity logs refreshed! 📋", "success");
+  renderActivityLogs();
+}
+
+function exportLogs() {
+  showToast("Exporting activity logs... 📊", "info");
+  // Implementation for exporting logs
+}
+
+function exportUsers() {
+  showToast("Exporting user data... 📊", "info");
+  // Implementation for exporting users
+}
+
+// Utility functions
+function animateCounter(elementId, targetValue) {
+  const element = document.querySelector(`#${elementId}`);
+  if (!element) return;
+  
+  const startValue = 0;
+  const increment = Math.ceil(targetValue / 30);
+  let currentValue = startValue;
+  
+  const interval = setInterval(() => {
+    currentValue += increment;
+    if (currentValue >= targetValue) {
+      currentValue = targetValue;
+      clearInterval(interval);
+    }
+    element.textContent = currentValue;
+  }, 50);
+}
+
+function addSecurityAlert(message, type = 'info') {
+  const alertsContainer = document.querySelector("#security-alerts");
+  
+  const alert = document.createElement('div');
+  alert.className = `security-alert ${type}`;
+  alert.innerHTML = `
+    <span>${message}</span>
+    <button onclick="this.parentElement.remove()" style="background: none; border: none; color: white; cursor: pointer; margin-left: auto;">✕</button>
+  `;
+  
+  alertsContainer.appendChild(alert);
+  
+  // Auto-remove after 10 seconds
+  setTimeout(() => {
+    if (alert.parentElement) {
+      alert.remove();
+    }
+  }, 10000);
+}
+
+function addSecurityLog(level, message) {
+  const newLog = {
+    timestamp: new Date().toLocaleTimeString(),
+    level: level,
+    message: message,
+    ip: "127.0.0.1"
+  };
+  
+  securityLogs.unshift(newLog);
+  renderSecurityLogs();
+  renderActivityLogs();
+}
+
+function startRealTimeUpdates() {
+  // Update dashboard stats every 30 seconds
+  setInterval(() => {
+    loadDashboardStats();
+  }, 30000);
+  
+  // Add random security events for demo
+  setInterval(() => {
+    const events = [
+      { level: "info", message: "User login successful" },
+      { level: "warning", message: "Rate limit approached" },
+      { level: "info", message: "Challenge attempt logged" }
+    ];
+    
+    const randomEvent = events[Math.floor(Math.random() * events.length)];
+    addSecurityLog(randomEvent.level, randomEvent.message);
+  }, 60000);
+}
+
+function adminSignOut() {
+  if (confirm("Sign out of admin panel?")) {
+    localStorage.removeItem("adminAuthenticated");
+    showToast("Admin session ended 🚪", "success");
+    setTimeout(() => {
+      window.location.href = "index.html";
+    }, 1000);
+  }
+}
+
+// Toast function (reused from other pages)
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type} show`;
+  toast.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️'}</span>
+      <span>${message}</span>
+    </div>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => document.body.removeChild(toast), 300);
+  }, 3000);
+}
+</script>
+</body>
+</html>

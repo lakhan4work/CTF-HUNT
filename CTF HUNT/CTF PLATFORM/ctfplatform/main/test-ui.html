@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dashboard</title>
+    <link rel="stylesheet" href="frontend/assets/styles/main.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <div class="brand-logo">🎯</div>
+                    <h1>CTF HUNT</h1>
+                </div>
+            </div>
+            <div class="sidebar-content">
+                <nav class="nav">
+                    <a href="frontend/index.html" class="nav-item" aria-current="page">
+                        <span class="nav-icon">🏠</span>
+                        Dashboard
+                        <span class="badge live">Live</span>
+                    </a>
+                    <a href="frontend/challenges.html" class="nav-item">
+                        <span class="nav-icon">🧩</span>
+                        Challenges
+                    </a>
+                    <a href="frontend/scoreboard.html" class="nav-item">
+                        <span class="nav-icon">🏆</span>
+                        Scoreboard
+                    </a>
+                </nav>
+            </div>
+            <div class="sidebar-footer">
+                <a class="button" href="frontend/challenges.html">🚀 Start Hacking</a>
+                <button id="sign-out" class="button danger mt-md">🚪 Sign Out</button>
+            </div>
+        </aside>
+        
+        <main class="content">
+            <header class="header">
+                <div class="header-content">
+                    <h2 class="mb-sm">Welcome back, <span id="username" class="text-primary">Test User</span> 👋</h2>
+                    <div class="badge live">🔴 AI Security CTF • Live Event</div>
+                </div>
+            </header>
+
+            <section class="grid grid-4 mb-xl">
+                <article class="card kpi-card">
+                    <div class="kpi-value" id="points">420</div>
+                    <div class="kpi-label">Total Points</div>
+                </article>
+                <article class="card kpi-card">
+                    <div class="kpi-value" id="rank">#5</div>
+                    <div class="kpi-label">Current Rank</div>
+                </article>
+                <article class="card kpi-card">
+                    <div class="kpi-value" id="solved">7</div>
+                    <div class="kpi-label">Challenges Solved</div>
+                </article>
+                <article class="card kpi-card">
+                    <div class="kpi-value" id="time-left">2h 45m</div>
+                    <div class="kpi-label">Time Remaining</div>
+                </article>
+            </section>
+
+            <section class="card mb-xl">
+                <h3 class="mb-lg">🎯 Quick Actions</h3>
+                <div class="grid grid-3">
+                    <a href="frontend/challenges.html" class="button">
+                        🧩 View Challenges
+                    </a>
+                    <a href="frontend/scoreboard.html" class="button secondary">
+                        🏆 Check Leaderboard
+                    </a>
+                    <button id="refresh-stats" class="button secondary">
+                        🔄 Refresh Stats
+                    </button>
+                </div>
+            </section>
+
+            <footer class="footer text-muted">
+                © 2025 CTF HUNT Platform • Hack responsibly and have fun! 🚀
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        // Simple test functionality
+        document.addEventListener("DOMContentLoaded", () => {
+            console.log("Test page loaded successfully!");
+            
+            // Test toast notification
+            setTimeout(() => {
+                showToast("UI/UX enhanced successfully! 🎉", "success");
+            }, 1000);
+        });
+
+        function showToast(message, type = 'info') {
+            try {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type} show`;
+                toast.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+                        <span>${message}</span>
+                    </div>
+                `;
+                
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        if (document.body.contains(toast)) {
+                            document.body.removeChild(toast);
+                        }
+                    }, 300);
+                }, 3000);
+            } catch (error) {
+                console.error("Error showing toast:", error);
+            }
+        }
+    </script>
+</body>
+</html>

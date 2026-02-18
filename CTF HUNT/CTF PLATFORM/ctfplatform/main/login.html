@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CTF HUNT | Login</title>
+  <meta http-equiv="Content-Security-Policy"
+      content="
+        script-src 'self' 'unsafe-inline';
+        script-src-elem
+          'self'
+          'unsafe-inline'
+          https://cdn.botpress.cloud
+          https://files.bpcontent.cloud;
+      ">
+  <link rel="stylesheet" href="assets/styles/main.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    .auth-layout {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-primary);
+      padding: var(--space-xl);
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .auth-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-light), var(--accent-primary));
+    }
+
+    .auth-header {
+      text-align: center;
+      padding: var(--space-4xl) var(--space-3xl) var(--space-2xl);
+      background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-tertiary) 100%);
+    }
+
+    .auth-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .auth-brand-logo {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-light));
+      border-radius: var(--radius-xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size-3xl);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .auth-title {
+      font-size: var(--font-size-3xl);
+      margin-bottom: var(--space-sm);
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .auth-subtitle {
+      color: var(--text-muted);
+      font-size: var(--font-size-base);
+    }
+
+    .auth-body {
+      padding: var(--space-3xl);
+    }
+
+    .form-floating {
+      position: relative;
+      margin-bottom: var(--space-xl);
+    }
+
+    .form-floating input {
+      width: 100%;
+      padding: var(--space-lg) var(--space-lg);
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      color: var(--text-primary);
+      font-size: var(--font-size-base);
+      transition: all var(--transition-base);
+    }
+
+    .form-floating input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.1);
+      background: var(--bg-secondary);
+    }
+
+    .form-floating label {
+      position: absolute;
+      top: 50%;
+      left: var(--space-lg);
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: all var(--transition-base);
+      font-weight: 500;
+    }
+
+    .form-floating input:focus + label,
+    .form-floating input:not(:placeholder-shown) + label {
+      top: var(--space-sm);
+      transform: translateY(0);
+      font-size: var(--font-size-sm);
+      color: var(--accent-primary);
+    }
+
+    .auth-footer {
+      padding: var(--space-2xl) var(--space-3xl) var(--space-3xl);
+      text-align: center;
+      border-top: 1px solid var(--border-light);
+      background: var(--bg-tertiary);
+    }
+
+    .auth-footer p {
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .auth-footer a {
+      color: var(--accent-primary);
+      font-weight: 600;
+      transition: color var(--transition-fast);
+    }
+
+    .auth-footer a:hover {
+      color: var(--accent-light);
+    }
+  </style>
+</head>
+<body>
+<div class="auth-layout">
+  <div class="auth-container">
+    <div class="auth-header">
+      <div class="auth-brand">
+        <div class="auth-brand-logo">🎯</div>
+      </div>
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-subtitle">Sign in to continue your hacking journey</p>
+    </div>
+
+    <div class="auth-body">
+      <form id="loginForm">
+        <div class="form-floating">
+          <input type="email" id="email" name="email" placeholder=" " required/>
+          <label for="email">📧 Email Address</label>
+        </div>
+
+        <div class="form-floating">
+          <input type="password" id="password" name="password" placeholder=" " required/>
+          <label for="password">🔒 Password</label>
+        </div>
+
+        <div style="margin-bottom: var(--space-xl);">
+          <label style="display: flex; align-items: center; gap: var(--space-sm); cursor: pointer;">
+            <input type="checkbox" id="adminLogin" style="margin: 0;"/>
+            <span style="color: var(--text-muted); font-size: var(--font-size-sm);">🛡️ Administrator Login</span>
+          </label>
+        </div>
+
+        <button type="submit" id="loginBtn" class="button">
+          🚀 Sign In
+        </button>
+      </form>
+    </div>
+
+    <div class="auth-footer">
+      <p>Don't have an account? <a href="sign-up.html">Create one here</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+// Enhanced login functionality with better UX and error handling
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Login page loaded, initializing...");
+  
+  // Initialize form handler
+  const loginForm = document.querySelector("#loginForm");
+  if (loginForm) {
+    loginForm.addEventListener("submit", handleLogin);
+  }
+  
+  // Initialize validation handlers
+  const emailInput = document.querySelector("#email");
+  const passwordInput = document.querySelector("#password");
+  const adminCheckbox = document.querySelector("#adminLogin");
+  
+  if (emailInput) {
+    emailInput.addEventListener("blur", validateEmail);
+  }
+  
+  if (passwordInput) {
+    passwordInput.addEventListener("input", validatePassword);
+  }
+  
+  if (adminCheckbox) {
+    adminCheckbox.addEventListener("change", toggleAdminMode);
+  }
+  
+  // Add shake animation styles
+  const shakeCSS = `
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+  `;
+  const style = document.createElement('style');
+  style.textContent = shakeCSS;
+  document.head.appendChild(style);
+});
+
+async function handleLogin(e) {
+  e.preventDefault();
+
+  const loginBtn = document.querySelector("#loginBtn");
+  const emailInput = document.querySelector("#email");
+  const passwordInput = document.querySelector("#password");
+  const adminCheckbox = document.querySelector("#adminLogin");
+  
+  if (!loginBtn || !emailInput || !passwordInput) {
+    console.error("Required form elements not found");
+    return;
+  }
+  
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  const isAdminLogin = adminCheckbox ? adminCheckbox.checked : false;
+
+  // Validation
+  if (isAdminLogin) {
+    // Admin only needs password
+    if (!password) {
+      showToast("Please enter admin password", "error");
+      return;
+    }
+  } else {
+    // Regular user needs both email and password
+    if (!email || !password) {
+      showToast("Please fill in all fields", "error");
+      return;
+    }
+  }
+
+  // Loading state
+  loginBtn.classList.add("loading");
+  loginBtn.textContent = isAdminLogin ? "Authenticating admin..." : "Signing in...";
+  loginBtn.disabled = true;
+
+  try {
+    if (isAdminLogin) {
+      // Admin authentication
+      const response = await fetch("http://localhost:8000/authentication/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await response.json();
+      console.log("Admin login response:", data);
+
+        if (response.ok && data.isAdmin && data.message === "admin logged in successfully") {
+        localStorage.setItem("adminAuthenticated", "true");
+        localStorage.setItem("username", "Administrator");
+        
+        showToast("Admin authentication successful! 🛡️", "success");
+        
+          setTimeout(() => {
+            window.location.href = "admin.html";
+          }, 1500);
+      } else {
+        throw new Error(data.Message || data.message || "Admin authentication failed");
+      }
+    } else {
+      // Regular user authentication
+      const response = await fetch("http://localhost:8000/authentication/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      console.log("Login response:", data);
+
+      if (response.ok && data.message === "user logged in succesfully") {
+        localStorage.setItem("email", email);
+        
+        showToast("Login successful! Welcome back! 🎉", "success");
+        
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 1500);
+      } else {
+        throw new Error(data.Message || data.message || "Login failed");
+      }
+    }
+  } catch (err) {
+    console.error("Login error:", err);
+    showToast(`Login failed: ${err.message}`, "error");
+    
+    // Reset button state
+    loginBtn.classList.remove("loading");
+    loginBtn.textContent = "🚀 Sign In";
+    loginBtn.disabled = false;
+    
+    // Add shake animation to form
+    const authContainer = document.querySelector(".auth-container");
+    if (authContainer) {
+      authContainer.style.animation = "shake 0.5s ease-in-out";
+      setTimeout(() => {
+        authContainer.style.animation = "";
+      }, 500);
+    }
+  }
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+  try {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type} show`;
+    toast.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+        <span>${message}</span>
+      </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 300);
+    }, 3000);
+  } catch (error) {
+    console.error("Error showing toast:", error);
+  }
+}
+
+// Email validation
+function validateEmail() {
+  const emailInput = document.querySelector("#email");
+  if (!emailInput) return;
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (emailInput.value && !emailRegex.test(emailInput.value)) {
+    emailInput.style.borderColor = "var(--danger)";
+    showToast("Please enter a valid email address", "error");
+  } else {
+    emailInput.style.borderColor = "var(--border-light)";
+  }
+}
+
+// Password validation
+function validatePassword() {
+  const passwordInput = document.querySelector("#password");
+  if (!passwordInput) return;
+  
+  if (passwordInput.value.length > 0 && passwordInput.value.length < 6) {
+    passwordInput.style.borderColor = "var(--warning)";
+  } else if (passwordInput.value.length >= 6) {
+    passwordInput.style.borderColor = "var(--success)";
+  } else {
+    passwordInput.style.borderColor = "var(--border-light)";
+  }
+}
+
+// Toggle admin mode - handle form validation
+function toggleAdminMode() {
+  const emailInput = document.querySelector("#email");
+  const adminCheckbox = document.querySelector("#adminLogin");
+  const emailContainer = emailInput.closest('.form-floating');
+  
+  if (adminCheckbox.checked) {
+    // Admin mode - remove required attribute and hide email field
+    emailInput.removeAttribute('required');
+    emailInput.value = ''; // Clear email field
+    emailContainer.style.opacity = '0.5';
+    emailContainer.style.pointerEvents = 'none';
+    
+    // Add placeholder text
+    const label = emailContainer.querySelector('label');
+    if (label) {
+      label.innerHTML = '✉️ Email (Not needed for admin)';
+    }
+  } else {
+    // User mode - restore required attribute and show email field  
+    emailInput.setAttribute('required', '');
+    emailContainer.style.opacity = '1';
+    emailContainer.style.pointerEvents = 'auto';
+    
+    // Restore original label
+    const label = emailContainer.querySelector('label');
+    if (label) {
+      label.innerHTML = '✉️ Email';
+    }
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+A compiled program stores its flag on the stack, but never prints it.
+Analyze the contents of the 'secret_program.c' file to find the static string.
+(In a real CTF, you would use a debugger like GDB to inspect memory.)

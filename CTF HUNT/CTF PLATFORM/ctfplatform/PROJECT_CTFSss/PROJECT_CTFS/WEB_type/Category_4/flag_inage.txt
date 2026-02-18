@@ -1,0 +1,4 @@
+Response Status: 200 OK (Access Granted!)
+
+FLAG: flag{h77p_r3f3r3r_ch3ck_byp4ss}
+This content would normally be a binary image, but since you correctly inferred the required 'Referer' header (internal.dev.local), here is the flag.

@@ -1,0 +1,2 @@
+Welcome to the portal!
+To see different content, change the 'file' parameter in the URL.

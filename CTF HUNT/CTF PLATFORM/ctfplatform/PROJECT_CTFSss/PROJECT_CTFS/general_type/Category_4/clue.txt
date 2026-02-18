@@ -1,0 +1,4 @@
+The old secret key was replaced with this hash.
+Find the original key. The flag is the original key inside the standard format.
+
+Hash: 5f4dcc3b5aa765d61d8327deb882cf99

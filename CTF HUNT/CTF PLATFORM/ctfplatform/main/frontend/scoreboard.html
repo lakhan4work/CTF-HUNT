@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CTF HUNT | Scoreboard</title>
+  <link rel="stylesheet" href="assets/styles/main.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrapper">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="ctf-brand">
+  <img src="assets/styles/ctflogo.png" alt="CTF Hunt Logo" />
+  <span class="ctf-brand-text">CTF HUNT</span>
+</div>
+
+    </div>
+
+    <div class="sidebar-content">
+      <nav class="nav">
+        <a href="index.html" class="nav-item">
+          <span class="nav-icon">🏠</span>
+          Dashboard
+        </a>
+        <a href="challenges.html" class="nav-item">
+          <span class="nav-icon">🧩</span>
+          Challenges
+        </a>
+        <a href="scoreboard.html" class="nav-item" aria-current="page">
+          <span class="nav-icon">🏆</span>
+          Scoreboard
+          <span class="badge live">Live</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="sidebar-footer">
+      <a class="button secondary" href="index.html">🏠 Dashboard</a>
+      <button class="button danger mt-md" onclick="signOut()">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <header class="header">
+      <div class="header-content">
+        <h2 class="mb-sm">🏆 Live Scoreboard</h2>
+        <div class="badge live">🔴 Auto-updating • Last refresh: <span id="last-update">Now</span></div>
+      </div>
+      <div style="display: flex; gap: var(--space-md);">
+        <button id="refresh-scoreboard" class="button secondary">🔄 Refresh</button>
+        <button id="toggle-auto-refresh" class="button secondary">⏸️ Pause</button>
+      </div>
+    </header>
+
+    <!-- Top 3 Podium -->
+    <section class="mb-xl">
+      <h3 class="mb-lg">🥇 Top Performers</h3>
+      <div class="grid grid-3" id="podium">
+        <!-- Top 3 will be loaded here -->
+        <div class="card text-center" style="min-height: 150px; display: flex; align-items: center; justify-content: center;">
+          <div class="loading-spinner"></div>
+        </div>
+        <div class="card text-center" style="min-height: 150px; display: flex; align-items: center; justify-content: center;">
+          <div class="loading-spinner"></div>
+        </div>
+        <div class="card text-center" style="min-height: 150px; display: flex; align-items: center; justify-content: center;">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Full Leaderboard -->
+    <section class="table-container mb-xl">
+      <table class="table" aria-label="Scoreboard">
+        <thead>
+          <tr>
+            <th>🏅 Rank</th>
+            <th>👤 Player</th>
+            <th>💎 Points</th>
+            <th>🧩 Solved</th>
+            <th>⏱️ Last Solve</th>
+            <th>📊 Progress</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <!-- Leaderboard will be loaded here -->
+          <tr>
+            <td colspan="6" style="text-align: center; padding: var(--space-4xl);">
+              <div class="loading-spinner" style="margin: 0 auto var(--space-lg);"></div>
+              Loading leaderboard...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Team Management -->
+    <section class="card mb-xl">
+      <h3 class="mb-lg">👥 Team Settings</h3>
+      <form id="teamForm">
+        <div class="form-group">
+          <label class="form-label" for="team">Team Name</label>
+          <input 
+            id="team" 
+            name="team" 
+            class="form-input" 
+            placeholder="Enter your awesome team name..."
+            maxlength="50"
+          />
+        </div>
+        <button type="submit" class="button">💾 Update Team Name</button>
+      </form>
+    </section>
+
+    <footer class="footer text-muted text-center">
+      © 2025 CTF HUNT Platform • Competition updates every 30 seconds
+      <br>
+      🛡️ Fair play enforced • Report issues to organizers
+    </footer>
+  </main>
+</div>
+
+<script>
+let autoRefreshInterval;
+let isAutoRefreshing = true;
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadScoreboard();
+  startAutoRefresh();
+  
+  // Event listeners
+  document.querySelector("#refresh-scoreboard").addEventListener("click", refreshScoreboard);
+  document.querySelector("#toggle-auto-refresh").addEventListener("click", toggleAutoRefresh);
+  document.querySelector("#teamForm").addEventListener("submit", updateTeamName);
+});
+
+async function loadScoreboard() {
+  try {
+    // Simulate API call for now - replace with actual endpoint
+    const mockData = [
+      { rank: 1, username: "CyberNinja", points: 850, solved: 12, lastSolve: "2 mins ago" },
+      { rank: 2, username: "PromptHacker", points: 780, solved: 10, lastSolve: "5 mins ago" },
+      { rank: 3, username: "AIBreaker", points: 720, solved: 9, lastSolve: "8 mins ago" },
+      { rank: 4, username: "CodeWarrior", points: 650, solved: 8, lastSolve: "15 mins ago" },
+      { rank: 5, username: "BugHunter", points: 590, solved: 7, lastSolve: "22 mins ago" },
+      { rank: 6, username: "SecurityPro", points: 520, solved: 6, lastSolve: "30 mins ago" },
+      { rank: 7, username: "EthicalHacker", points: 480, solved: 6, lastSolve: "45 mins ago" },
+      { rank: 8, username: "CryptoSolver", points: 420, solved: 5, lastSolve: "1 hour ago" },
+    ];
+    
+    renderPodium(mockData.slice(0, 3));
+    renderLeaderboard(mockData);
+    
+    // Update last refresh time
+    document.querySelector("#last-update").textContent = new Date().toLocaleTimeString();
+    
+  } catch (err) {
+    console.error("Error loading scoreboard:", err);
+    showToast("Failed to load scoreboard data", "error");
+  }
+}
+
+function renderPodium(topThree) {
+  const podium = document.querySelector("#podium");
+  
+  // Reorder for podium effect: 2nd, 1st, 3rd
+  const podiumOrder = [topThree[1], topThree[0], topThree[2]].filter(Boolean);
+  const medals = ["🥈", "🥇", "🥉"];
+  const heights = ["140px", "180px", "120px"];
+  
+  podium.innerHTML = podiumOrder.map((player, index) => {
+    if (!player) return '<div class="card" style="opacity: 0.3;"><p class="text-muted">No player</p></div>';
+    
+    return `
+      <div class="card text-center" style="min-height: ${heights[index]}; background: linear-gradient(135deg, var(--bg-card), var(--bg-tertiary));">
+        <div style="font-size: 3rem; margin-bottom: var(--space-md);">${medals[index]}</div>
+        <h4 class="mb-sm">${player.username}</h4>
+        <div class="kpi-value" style="font-size: var(--font-size-2xl); margin-bottom: var(--space-sm);">
+          ${player.points}
+        </div>
+        <div class="kpi-label">${player.solved} solved</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderLeaderboard(data) {
+  const tbody = document.querySelector("#leaderboard-body");
+  
+  tbody.innerHTML = data.map(player => {
+    const progressPercent = Math.min((player.points / 1000) * 100, 100);
+    
+    return `
+      <tr style="animation: slideIn 0.5s ease-out ${player.rank * 0.05}s both;">
+        <td>
+          <div style="display: flex; align-items: center; gap: var(--space-sm);">
+            ${getRankIcon(player.rank)}
+            <strong>${player.rank}</strong>
+          </div>
+        </td>
+        <td>
+          <div style="display: flex; align-items: center; gap: var(--space-sm);">
+            <div style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-light)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: var(--font-size-sm);">
+              ${player.username.charAt(0).toUpperCase()}
+            </div>
+            <strong>${player.username}</strong>
+          </div>
+        </td>
+        <td><strong style="color: var(--accent-primary);">${player.points}</strong></td>
+        <td>${player.solved}</td>
+        <td style="color: var(--text-muted);">${player.lastSolve}</td>
+        <td>
+          <div style="width: 100%; height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden;">
+            <div style="width: ${progressPercent}%; height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-light)); transition: width 1s ease-out;"></div>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function getRankIcon(rank) {
+  switch(rank) {
+    case 1: return "🥇";
+    case 2: return "🥈";
+    case 3: return "🥉";
+    default: return "🏅";
+  }
+}
+
+function refreshScoreboard() {
+  const btn = document.querySelector("#refresh-scoreboard");
+  btn.classList.add("loading");
+  btn.textContent = "Refreshing...";
+  
+  setTimeout(() => {
+    loadScoreboard();
+    btn.classList.remove("loading");
+    btn.textContent = "🔄 Refresh";
+    showToast("Scoreboard updated! 📊", "success");
+  }, 1000);
+}
+
+function toggleAutoRefresh() {
+  const btn = document.querySelector("#toggle-auto-refresh");
+  
+  if (isAutoRefreshing) {
+    clearInterval(autoRefreshInterval);
+    btn.textContent = "▶️ Resume";
+    btn.style.background = "var(--success)";
+    isAutoRefreshing = false;
+    showToast("Auto-refresh paused", "info");
+  } else {
+    startAutoRefresh();
+    btn.textContent = "⏸️ Pause";
+    btn.style.background = "";
+    isAutoRefreshing = true;
+    showToast("Auto-refresh resumed", "success");
+  }
+}
+
+function startAutoRefresh() {
+  autoRefreshInterval = setInterval(() => {
+    loadScoreboard();
+  }, 30000); // Refresh every 30 seconds
+}
+
+async function updateTeamName(e) {
+  e.preventDefault();
+  
+  const teamName = document.querySelector("#team").value.trim();
+  const btn = e.target.querySelector('button[type="submit"]');
+  
+  if (!teamName) {
+    showToast("Please enter a team name", "error");
+    return;
+  }
+  
+  btn.classList.add("loading");
+  btn.textContent = "Updating...";
+  btn.disabled = true;
+  
+  try {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    showToast(`Team name updated to "${teamName}"! 🎉`, "success");
+    document.querySelector("#team").value = "";
+    
+  } catch (err) {
+    console.error("Error updating team name:", err);
+    showToast("Failed to update team name", "error");
+  } finally {
+    btn.classList.remove("loading");
+    btn.textContent = "💾 Update Team Name";
+    btn.disabled = false;
+  }
+}
+
+function signOut() {
+  localStorage.removeItem("username");
+  localStorage.removeItem("email");
+  showToast("Successfully signed out! 👋", "success");
+  
+  setTimeout(() => {
+    window.location.href = "../login.html";
+  }, 1000);
+}
+
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type} show`;
+  toast.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+      <span>${message}</span>
+    </div>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => document.body.removeChild(toast), 300);
+  }, 3000);
+}
+
+// Add slide-in animation
+const slideInCSS = `
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+`;
+const style = document.createElement('style');
+style.textContent = slideInCSS;
+document.head.appendChild(style);
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+  }
+});
+</script>
+</body>
+</html>

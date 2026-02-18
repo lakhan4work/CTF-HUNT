@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CTF HUNT | Challenges</title>
+  <link rel="stylesheet" href="assets/styles/main.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrapper">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="ctf-brand">
+  <img src="assets/styles/ctflogo.png" alt="CTF Hunt Logo" />
+  <span class="ctf-brand-text">CTF HUNT</span>
+</div>
+
+    </div>
+
+    <div class="sidebar-content">
+      <nav class="nav">
+        <a href="index.html" class="nav-item">
+          <span class="nav-icon">🏠</span>
+          Dashboard
+        </a>
+        <a href="challenges.html" class="nav-item" aria-current="page">
+          <span class="nav-icon">🧩</span>
+          Challenges
+          <span class="badge live">Active</span>
+        </a>
+        <a href="scoreboard.html" class="nav-item">
+          <span class="nav-icon">🏆</span>
+          Scoreboard
+        </a>
+      </nav>
+    </div>
+
+    <div class="sidebar-footer">
+      <a class="button secondary" href="index.html">🏠 Dashboard</a>
+      <button class="button danger mt-md" onclick="signOut()">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <header class="header">
+      <div class="header-content">
+        <h2 class="mb-sm">🧩 Challenge Arena</h2>
+        <div class="badge live">🔴 Live Challenges • <span id="challenge-count">Loading...</span> Available</div>
+      </div>
+      <form class="searchbar" method="get" action="/api/challenges/search">
+        <input 
+          name="q" 
+          class="search-input" 
+          placeholder="🔍 Search challenges by title, category, or points..."
+        />
+        <button type="submit" class="button secondary">Search</button>
+      </form>
+    </header>
+
+    <section class="card mb-xl">
+      <h3 class="mb-lg">🎛️ Filter Challenges</h3>
+      <form class="form" method="get" action="/api/challenges">
+        <div class="grid grid-4">
+          <div class="form-group">
+            <label class="form-label" for="tag">Category</label>
+            <select id="tag" name="tag" class="form-select">
+              <option value="">All Categories</option>
+              <option value="Cryptography">🔐 Cryptography</option>
+              <option value="WebSecurity">🌐 Web Security</option>
+              <option value="ReverseEngineering">⚙️ Reverse Engineering</option>
+              <option value="Forensics">🔍 Forensics</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="points">Points</label>
+            <select id="points" name="points" class="form-select">
+              <option value="">Any Points</option>
+              <option value="100">100 Points</option>
+              <option value="150">150 Points</option>
+              <option value="200">200 Points</option>
+              <option value="300">300 Points</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="status">Status</label>
+            <select id="status" name="status" class="form-select">
+              <option value="">All Status</option>
+              <option value="unsolved">Unsolved</option>
+              <option value="solved">Solved</option>
+            </select>
+          </div>
+          <div class="form-group" style="align-self: end;">
+            <button type="submit" class="button">🔍 Apply Filters</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="mb-xl">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
+        <h3>Available Challenges</h3>
+        <button id="refresh-challenges" class="button secondary">
+          🔄 Refresh
+        </button>
+      </div>
+      <div class="grid" id="container">
+        <!-- Challenge cards will be loaded here -->
+        <div class="card" style="display: flex; align-items: center; justify-content: center; min-height: 200px;">
+          <div class="loading-spinner"></div>
+          <span style="margin-left: var(--space-md); color: var(--text-muted);">Loading challenges...</span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer text-muted text-center">
+      Need help? Contact organizers at <a href="mailto:ctf@example.com">ctf@example.com</a>
+      <br>
+      Remember: Be ethical, hack responsibly! 🛡️
+    </footer>
+  </main>
+</div>
+</body>
+<script>
+// Enhanced challenges functionality
+let challengesData = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadChallenges();
+  
+  // Refresh button functionality
+  document.querySelector("#refresh-challenges").addEventListener("click", () => {
+    const btn = document.querySelector("#refresh-challenges");
+    btn.classList.add("loading");
+    btn.textContent = "Refreshing...";
+    
+    setTimeout(() => {
+      loadChallenges();
+      btn.classList.remove("loading");
+      btn.textContent = "🔄 Refresh";
+      showToast("Challenges refreshed! 📊", "success");
+    }, 1000);
+  });
+
+  // Filter functionality
+  const filterForm = document.querySelector('.form');
+  filterForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    filterChallenges();
+  });
+
+  // Real-time filtering when selections change
+  ['tag', 'points', 'status'].forEach(id => {
+    document.getElementById(id).addEventListener('change', filterChallenges);
+  });
+});
+
+async function loadChallenges() {
+  try {
+    const response = await fetch("http://localhost:8000/challenges/allCourses", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch challenges');
+    }
+
+    const data = await response.json();
+    challengesData = data.courses;
+    console.log("Challenges loaded:", data);
+
+    // Update challenge count
+    document.querySelector("#challenge-count").textContent = challengesData.length;
+
+    renderChallenges(challengesData);
+
+  } catch (err) {
+    console.error("Error fetching challenges:", err);
+    showToast("Failed to load challenges. Please try again.", "error");
+    
+    // Show error state
+    const container = document.querySelector("#container");
+    container.innerHTML = `
+      <div class="card" style="text-align: center; padding: var(--space-4xl);">
+        <h3 style="color: var(--danger); margin-bottom: var(--space-lg);">⚠️ Failed to Load Challenges</h3>
+        <p class="text-muted mb-xl">Unable to fetch challenges from the server.</p>
+        <button class="button" onclick="loadChallenges()">🔄 Try Again</button>
+      </div>
+    `;
+  }
+}
+
+function filterChallenges() {
+  const categoryFilter = document.getElementById('tag').value;
+  const pointsFilter = document.getElementById('points').value;
+  const statusFilter = document.getElementById('status').value;
+
+  let filtered = challengesData.filter(challenge => {
+    // Category filter
+    if (categoryFilter && challenge.category !== categoryFilter) {
+      return false;
+    }
+
+    // Points filter
+    if (pointsFilter && challenge.points.toString() !== pointsFilter) {
+      return false;
+    }
+
+    // Status filter
+    if (statusFilter === 'solved' && challenge.solved === 0) {
+      return false;
+    }
+    if (statusFilter === 'unsolved' && challenge.solved > 0) {
+      return false;
+    }
+
+    return true;
+  });
+
+  renderChallenges(filtered);
+  showToast(`Found ${filtered.length} challenge(s)`, 'info');
+}
+
+function renderChallenges(challenges) {
+  const container = document.querySelector("#container");
+  container.innerHTML = "";
+
+  if (challenges.length === 0) {
+    container.innerHTML = `
+      <div class="card" style="text-align: center; padding: var(--space-4xl); grid-column: 1 / -1;">
+        <h3 style="margin-bottom: var(--space-lg);">🎯 No Challenges Found</h3>
+        <p class="text-muted">Try adjusting your filters or check back later for new challenges.</p>
+      </div>
+    `;
+    return;
+  }
+
+  challenges.forEach((course, index) => {
+    const challengeCard = document.createElement("div");
+    challengeCard.className = "challenge-card card";
+    challengeCard.style.animationDelay = `${index * 0.1}s`;
+    
+    // Determine difficulty color
+    let difficultyColor = 'var(--text-muted)';
+    if (course.difficulty === 'Easy') difficultyColor = '#10b981';
+    else if (course.difficulty === 'Medium') difficultyColor = '#f59e0b';
+    else if (course.difficulty === 'Hard') difficultyColor = '#ef4444';
+
+    // Category emoji mapping
+    const categoryEmoji = {
+      'Cryptography': '🔐',
+      'WebSecurity': '🌐',
+      'ReverseEngineering': '⚙️',
+      'Forensics': '🔍'
+    };
+
+    challengeCard.innerHTML = `
+      <div class="challenge-header">
+        <span class="challenge-tag">${categoryEmoji[course.category] || '🎯'} ${course.category || 'General'}</span>
+        <span class="challenge-points">💎 ${course.points} pts</span>
+      </div>
+      
+      <div class="challenge-title">${course.challenge}</div>
+      <div class="challenge-difficulty" style="color: ${difficultyColor};">
+        🎚️ ${course.difficulty}
+      </div>
+      
+      <p class="challenge-description">${course.description}</p>
+      
+      ${course.hasFiles ? `
+        <button class="button secondary" style="margin-bottom: 0.5rem;" onclick="viewChallengeFiles('${course.challenge.replace(/'/g, "\\'")}')">
+          📂 View Challenge Files
+        </button>
+      ` : ''}
+      
+      <button class="solve-btn button" data-challenge-id="${index}">
+        🚀 Submit Flag
+      </button>
+    `;
+
+    // Add solve button functionality
+    const solveBtn = challengeCard.querySelector(".solve-btn");
+    solveBtn.addEventListener("click", () => handleSolveChallenge(course, solveBtn));
+
+    container.appendChild(challengeCard);
+  });
+
+  // Add entrance animation
+  const cards = container.querySelectorAll('.challenge-card');
+  cards.forEach((card, index) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    setTimeout(() => {
+      card.style.transition = 'all 0.5s ease-out';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, index * 100);
+  });
+}
+
+async function handleSolveChallenge(course, button) {
+  const username = localStorage.getItem("username");
+  
+  if (!username) {
+    showToast("Please log in to solve challenges", "error");
+    return;
+  }
+
+  // Show flag submission dialog
+  const flag = prompt(`🚩 Enter the flag for "${course.challenge}":\n(Format: flag{...} or CTF{...})`);
+  
+  if (!flag) {
+    return; // User cancelled
+  }
+
+  // Loading state
+  button.classList.add("loading");
+  button.textContent = "Verifying...";
+  button.disabled = true;
+
+  try {
+    console.log("Submitting flag:", flag);
+    console.log("Challenge:", course.challenge);
+    
+    const response = await fetch("http://localhost:8000/challenges/solveChallenge", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        points: course.points,
+        challenge: course.challenge,
+        username: username,
+        flag: flag
+      })
+    });
+
+    const result = await response.json();
+    console.log("Response status:", response.status);
+    console.log("Response ok:", response.ok);
+    console.log("Solve response:", result);
+
+    if (response.ok) {
+      console.log("Response is OK (200-299)");
+      // Success state - check for success flag or specific success messages
+      if (result.success === true || result.message === "Solved" || result.message === "Correct flag! Challenge solved!") {
+        console.log("SUCCESS: Flag is correct!");
+        button.classList.remove("loading");
+        button.classList.add("success");
+        button.textContent = "✅ Solved!";
+        button.style.background = "#48bb78";
+        button.disabled = true;
+        
+        showToast(`🎉 Correct flag! +${course.points} points`, "success");
+        
+        // Add celebration effect
+        celebrateSuccess(button);
+        
+        // Reload challenges after a delay to show updated solved count
+        setTimeout(() => {
+          loadChallenges();
+        }, 2000);
+      } else {
+        console.log("UNEXPECTED: Response OK but no success flag");
+        // If response is OK but doesn't have success flag, treat as error
+        throw new Error(result.message || "Unexpected response");
+      }
+    } else {
+      console.log("Response NOT OK (error status)");
+      throw new Error(result.message || "Incorrect flag");
+    }
+
+  } catch (err) {
+    console.log("CATCH BLOCK - Error occurred:", err.message);
+    console.error("Error solving challenge:", err);
+    showToast(`❌ ${err.message}`, "error");
+    
+    // Reset button state
+    button.classList.remove("loading");
+    button.textContent = "🚀 Submit Flag";
+    button.disabled = false;
+    
+    // Add shake animation on error
+    button.style.animation = "shake 0.5s";
+    setTimeout(() => {
+      button.style.animation = "";
+    }, 500);
+  }
+}
+
+// View challenge files in a modal
+async function viewChallengeFiles(challengeName) {
+  console.log("Loading challenge:", challengeName);
+  
+  try {
+    const response = await fetch(`http://localhost:8000/ctf/challenge/${encodeURIComponent(challengeName)}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to load challenge files');
+    }
+
+    const data = await response.json();
+    console.log("Challenge data received:", data);
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 2rem;
+      backdrop-filter: blur(4px);
+    `;
+    
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+      background: #1e2631;
+      color: #f7fafc;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 900px;
+      max-height: 85vh;
+      overflow-y: auto;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      border: 1px solid #2d3748;
+    `;
+    
+    let filesHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem; border-bottom: 2px solid #4299e1; padding-bottom: 1rem;">
+        <div>
+          <h2 style="margin: 0 0 0.5rem 0; color: #4299e1; font-size: 1.75rem;">📂 ${data.name}</h2>
+          <p style="color: #a0aec0; margin: 0; font-size: 1rem;">${data.description}</p>
+        </div>
+      </div>
+      
+      <div style="background: #252d3d; padding: 1.25rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #ed8936;">
+        <strong style="color: #ed8936; font-size: 1.1rem;">💡 Hints:</strong>
+        <ul style="margin: 0.75rem 0 0 1.5rem; color: #e2e8f0; line-height: 1.8;">
+          ${data.hints.map(hint => `<li style="margin-bottom: 0.5rem;">${hint}</li>`).join('')}
+        </ul>
+      </div>
+      
+      <h3 style="margin-bottom: 1.25rem; color: #63b3ed; font-size: 1.3rem;">📄 Challenge Files:</h3>
+    `;
+    
+    // Display each file
+    for (const [filename, content] of Object.entries(data.files)) {
+      filesHTML += `
+        <div style="margin-bottom: 1.5rem; border: 1px solid #2d3748; border-radius: 8px; overflow: hidden; background: #252d3d;">
+          <div style="background: #2d3748; padding: 0.75rem 1rem; border-bottom: 1px solid #4a5568; display: flex; justify-content: space-between; align-items: center;">
+            <strong style="color: #63b3ed; font-size: 1rem;">📄 ${filename}</strong>
+            <a href="http://localhost:8000/ctf/download/${encodeURIComponent(challengeName)}/${filename}" 
+               class="button secondary" 
+               style="padding: 0.4rem 1rem; font-size: 0.875rem; background: #4299e1; color: white; text-decoration: none; border-radius: 6px; border: none; cursor: pointer; transition: background 0.2s;"
+               onmouseover="this.style.background='#3182ce'" 
+               onmouseout="this.style.background='#4299e1'"
+               download>
+              ⬇️ Download
+            </a>
+          </div>
+          <pre style="margin: 0; padding: 1.25rem; background: #0a0e15; color: #d4d4d4; overflow-x: auto; max-height: 350px; font-size: 0.9rem; line-height: 1.6;">${escapeHtml(content)}</pre>
+        </div>
+      `;
+    }
+    
+    filesHTML += `
+      <button onclick="this.closest('[style*=\\'position: fixed\\']').remove()" 
+        style="width: 100%; margin-top: 1.5rem; padding: 0.75rem 1.5rem; background: #4299e1; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s;"
+        onmouseover="this.style.background='#3182ce'" 
+        onmouseout="this.style.background='#4299e1'">
+        ✖️ Close
+      </button>
+    `;
+    
+    modalContent.innerHTML = filesHTML;
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+    
+    // Close on Escape key
+    const escapeHandler = (e) => {
+      if (e.key === 'Escape') {
+        modal.remove();
+        document.removeEventListener('keydown', escapeHandler);
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    
+  } catch (err) {
+    console.error("Error loading challenge files:", err);
+    showToast("Failed to load challenge files: " + err.message, "error");
+  }
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function celebrateSuccess(button) {
+  // Create confetti effect
+  for (let i = 0; i < 20; i++) {
+    const confetti = document.createElement('div');
+    confetti.style.cssText = `
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background: ${['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1'][Math.floor(Math.random() * 4)]};
+      pointer-events: none;
+      z-index: 1000;
+      border-radius: 50%;
+    `;
+    
+    const rect = button.getBoundingClientRect();
+    confetti.style.left = (rect.left + rect.width / 2) + 'px';
+    confetti.style.top = (rect.top + rect.height / 2) + 'px';
+    
+    document.body.appendChild(confetti);
+    
+    // Animate confetti
+    const animation = confetti.animate([
+      { 
+        transform: 'translate(0, 0) scale(1)',
+        opacity: 1 
+      },
+      { 
+        transform: `translate(${(Math.random() - 0.5) * 200}px, ${-100 - Math.random() * 100}px) scale(0)`,
+        opacity: 0 
+      }
+    ], {
+      duration: 1000 + Math.random() * 1000,
+      easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+    });
+    
+    animation.onfinish = () => confetti.remove();
+  }
+}
+
+// Sign out function
+function signOut() {
+  localStorage.removeItem("username");
+  localStorage.removeItem("email");
+  showToast("Successfully signed out! 👋", "success");
+  
+  setTimeout(() => {
+    window.location.href = "../login.html";
+  }, 1000);
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type} show`;
+  toast.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+      <span>${message}</span>
+    </div>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => document.body.removeChild(toast), 300);
+  }, 3000);
+}
+</script>
+
+</html>

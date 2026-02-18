@@ -1,0 +1,8 @@
+
+# Web crawlers, please respect our privacy.
+# Do NOT index the /admin or any path that begins with /secret.
+
+User-agent: *
+Disallow: /admin/
+Disallow: /secret_stuff/
+Disallow: /admin.html
